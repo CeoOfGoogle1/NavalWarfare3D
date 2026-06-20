@@ -132,6 +132,7 @@ MonoBehaviour:
   velocity: {x: 0, y: 0, z: 0}
   power: 1
   ap: 1
+  team: 0
 --- !u!114 &1159135876561899834
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -144,7 +145,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c93b9e2045ae2e54ba655e12391a51a8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Shell
-  muzzleVelocity: 100
+  muzzleVelocity: 300
 --- !u!114 &9054594729218837475
 MonoBehaviour:
   m_ObjectHideFlags: 0

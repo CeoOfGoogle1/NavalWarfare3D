@@ -1,8 +1,21 @@
+using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 public class Navigation : MonoBehaviour
 {
-    public Transform target;
+    public Transform targetTransform;
+    public Vector3 target;
+    public List<Vector3> waypoints;
+    public float waypointArrivalDistance;
+    [SerializeField] PIDController headingPID;
+    [SerializeField] PIDController throttlePID;
+    public Vector3 targetDirection;
+    public float headingError;
+    float currentHeading;
+    float targetHeading;
+    public float forcedHeading;
+    public float targetDistance;
     Propulsion ship;
     Rigidbody rb;
 
@@ -12,24 +25,37 @@ public class Navigation : MonoBehaviour
         rb = GetComponent<Rigidbody>();
     }
 
-    void Update()
+    void FixedUpdate()
     {
-        if (target == null) return;
+        float dt = Time.fixedDeltaTime;
 
-        Vector3 targetDir = target.position - transform.position;
-        float angle = Vector3.SignedAngle(transform.forward, targetDir.normalized, Vector3.up);
-        if (Mathf.Abs(angle) > 5)
+        if (targetTransform != null) target = targetTransform.position;
+        if (target == null)
         {
-            float turn = Mathf.Clamp(angle / 45, 1, -1);
-            ship.rudderInput = Mathf.Lerp(ship.rudderInput, turn, Time.deltaTime * 2f);
-        }
-        else
-        {
-            ship.rudderInput = 0f;
+            ship.rudderInput = 0;
+            ship.throttle = 0;
+            return;
         }
 
-        float alignment = Vector3.Dot(targetDir.normalized, transform.forward);
-        ship.throttle = Mathf.Clamp01(alignment);
-        //Debug.Log(angle);
+        if (waypoints != null)
+        {
+            target = waypoints.First();
+            if (waypointArrivalDistance > Vector3.Distance(transform.position, target))
+            {
+                waypoints.Remove(waypoints.First());
+            } 
+        }
+
+        targetDirection = target - transform.position;
+        currentHeading = transform.eulerAngles.y;
+        targetHeading = Mathf.Atan2(targetDirection.x, targetDirection.z) * Mathf.Rad2Deg;
+        if (forcedHeading != 0)
+        {
+            targetHeading = forcedHeading;
+        }
+        ship.rudderInput = -headingPID.Update(dt, currentHeading, targetHeading, true);
+
+        targetDistance = Vector3.Distance(transform.position, target);
+        ship.throttle = -throttlePID.Update(dt, targetDistance, 0);
     }
 }

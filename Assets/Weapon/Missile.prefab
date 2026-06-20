@@ -132,6 +132,7 @@ MonoBehaviour:
   velocity: {x: 0, y: 0, z: 0}
   power: 1
   ap: 1
+  team: 0
 --- !u!114 &3176449751563793161
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -145,13 +146,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Missile
   acceleration: 100
-  fuel: 2
-  turnRate: 10
+  fuel: 10
+  turnRate: 20
   dragCoefficient: 0.001
   liftCoefficient: 0.01
   target: {fileID: 977331294801069478, guid: 6d94d264214c1a7449b2ffc216532c47, type: 3}
-  cruise: 0
-  cruiseHeight: 10
+  cruise: 1
+  cruiseHeight: 50
+  cruiseEndDistance: 10
   N: 1
 --- !u!2083052967 &5795565525566128640
 VisualEffect:

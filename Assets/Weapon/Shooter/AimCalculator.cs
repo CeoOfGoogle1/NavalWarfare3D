@@ -23,14 +23,12 @@ public class AimCalculator : MonoBehaviour
             targetPosition - shooterPosition,
             relVel);
 
-        if (t <= 0f)
-            return false;
+        if (t <= 0f) return false;
 
         // Refine several times because gravity changes flight time
         for(int i = 0; i < iterations; i++)
         {
-            Vector3 interceptPos =
-                targetPosition + relVel * t;
+            Vector3 interceptPos = targetPosition + relVel * t;
 
             if(!SolveBallisticArc(
                 shooterPosition,
@@ -42,7 +40,6 @@ public class AimCalculator : MonoBehaviour
 
             t = flightTime;
         }
-
         return true;
     }
 
@@ -57,21 +54,17 @@ public class AimCalculator : MonoBehaviour
 
         float det = b*b - 4*a*c;
 
-        if(det < 0)
-            return -1;
+        if(det < 0) return -1;
 
-        if(Mathf.Abs(a) < 0.001f)
-            return -c / b;
+        if(Mathf.Abs(a) < 0.001f) return -c / b;
 
         float t1 = (-b - Mathf.Sqrt(det))/(2*a);
         float t2 = (-b + Mathf.Sqrt(det))/(2*a);
 
-        if(t1 > 0 && t2 > 0)
-            return Mathf.Min(t1,t2);
+        if (t1 > 0 && t2 > 0) return Mathf.Min(t1,t2);
 
         return Mathf.Max(t1,t2);
     }
-
 
     bool SolveBallisticArc(
         Vector3 origin,
@@ -85,8 +78,7 @@ public class AimCalculator : MonoBehaviour
 
         Vector3 diff = target - origin;
 
-        Vector3 horizontal =
-            new Vector3(diff.x,0,diff.z);
+        Vector3 horizontal = new Vector3(diff.x,0,diff.z);
 
         float x = horizontal.magnitude;
         float y = diff.y;
@@ -95,29 +87,41 @@ public class AimCalculator : MonoBehaviour
 
         float v2 = speed*speed;
 
-        float root =
-            v2*v2 -
-            g*(g*x*x + 2*y*v2);
+        float root = v2*v2 - g*(g*x*x + 2*y*v2);
 
-        if(root < 0)
-            return false;
+        if(root < 0) return false;
 
         // Low arc
-        float angle =
-            Mathf.Atan(
-                (v2 - Mathf.Sqrt(root))
-                /(g*x)
-            );
+        float angle = Mathf.Atan((v2 - Mathf.Sqrt(root)) / (g*x));
 
         Vector3 flatDir = horizontal.normalized;
 
-        fireDir =
-            flatDir*Mathf.Cos(angle)
-            + Vector3.up*Mathf.Sin(angle);
+        fireDir = flatDir*Mathf.Cos(angle) + Vector3.up*Mathf.Sin(angle);
 
-        flightTime =
-            x/(speed*Mathf.Cos(angle));
+        flightTime = x/(speed*Mathf.Cos(angle));
 
         return true;
+    }
+
+    public bool CheckReachability(
+        Vector3 origin,
+        Vector3 target,
+        float speed)
+    {
+        Vector3 diff = target - origin;
+
+        Vector3 horizontal = new Vector3(diff.x,0,diff.z);
+
+        float x = horizontal.magnitude;
+        float y = diff.y;
+
+        float g = Mathf.Abs(Physics.gravity.y);
+
+        float v2 = speed*speed;
+
+        float root = v2*v2 - g*(g*x*x + 2*y*v2);
+
+        if (root >= 0) return true;
+        else return false;
     }
 }

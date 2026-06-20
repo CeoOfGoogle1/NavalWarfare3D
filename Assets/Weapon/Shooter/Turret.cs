@@ -26,23 +26,31 @@ public class Turret : MonoBehaviour
     public float minPitch;
     public float maxYaw;
     public float minYaw;
+    public bool autoFire;
+    public bool autoTarget;
+    public int team;
     AimCalculator aimCalculator;
     Shell shell;
     Projectile p;
-    //VisualEffect tracer;
+    FriendsAndEnemies iff;
+    VisualEffect tracer;
 
     void Start()
     {
         aimCalculator = FindFirstObjectByType<AimCalculator>();
         shell = projectile.GetComponent<Shell>();
         p = projectile.GetComponent<Projectile>();
-        //tracer = projectile.GetComponent<VisualEffect>();
-        //tracer.enabled = false;
+        iff = FindFirstObjectByType<FriendsAndEnemies>();
+        tracer = projectile.GetComponent<VisualEffect>();
+        tracer.enabled = false;
     }
 
     void Update()
     {
-        if (Input.GetKey(KeyCode.F) && Time.time >= nextFireTime && magazine > 0)
+        if (Input.GetKey(KeyCode.F) 
+            || (autoFire = true && Mathf.Abs(pitch - targetPitch) < 1 && Mathf.Abs(yaw - targetYaw) < 1)
+            && Time.time >= nextFireTime 
+            && magazine > 0)
         {
             nextFireTime = Time.time + firerate;
             magazine--;
@@ -51,12 +59,12 @@ public class Turret : MonoBehaviour
                 tracerSpace++;
                 if (tracerSpace >= tracerSpacing)
                 {
-                    //tracer.enabled = true;
+                    tracer.enabled = true;
                     tracerSpace = 0;
                 }
                 else
                 {
-                    //tracer.enabled = false;
+                    tracer.enabled = false;
                 }
             }
             Shoot();
@@ -73,28 +81,41 @@ public class Turret : MonoBehaviour
             }
         }
 
+        if (autoTarget)
+        {
+            foreach (var enemy in iff.spottedEnemies)
+            {
+                float horizontalMaxRange = shell.muzzleVelocity * shell.muzzleVelocity / Physics.gravity.y;
+                if (Vector3.Distance(enemy.transform.position, transform.position) <= horizontalMaxRange)
+                {
+                    bool canReach = aimCalculator.CheckReachability(transform.position, enemy.transform.position, shell.muzzleVelocity);
+                    if (canReach)
+                    {
+                        target = enemy.transform;
+                    }
+                }
+            }
+        }
+
         if (target != null)
         {
-            Vector3 targetPosition = target.position;
-            Vector3 targetVelocity = target.GetComponent<Rigidbody>().linearVelocity;
-            Vector3 shooterPosition = spawn.position;
             Vector3 shooterVelocity = Vector3.zero;
 
             if (aimCalculator.CalculateAim(
-                targetPosition,
-                targetVelocity,
-                shooterPosition,
+                target.position,
+                target.GetComponent<Rigidbody>().linearVelocity,
+                spawn.position,
                 shooterVelocity,
                 shell.muzzleVelocity,
-                //p.dragCoefficient,
                 out Vector3 aimDirection))
             {
                 targetYaw = Mathf.Atan2(aimDirection.x, aimDirection.z) * Mathf.Rad2Deg;
                 targetPitch = Mathf.Asin(aimDirection.y) * Mathf.Rad2Deg;
-                Debug.Log(targetVelocity);
+                //Debug.Log(target.GetComponent<Rigidbody>().linearVelocity);
             }
             else
             {
+                target = null;
                 return; // No solution exists
             }
         }
@@ -114,7 +135,7 @@ public class Turret : MonoBehaviour
         AudioManager.instance.Play("fire", transform);
 
         Quaternion correction = Quaternion.Euler(0, -90, 0);
-        //GameObject vfxInstance = Instantiate(firingEffect, spawn.position, spawn.rotation * correction);
+        GameObject vfxInstance = Instantiate(firingEffect, spawn.position, spawn.rotation * correction);
 
         Quaternion offset = Quaternion.Euler(
             Random.Range(-inaccuracy, inaccuracy), 
@@ -122,6 +143,6 @@ public class Turret : MonoBehaviour
             Random.Range(-inaccuracy, inaccuracy));
         GameObject newProjectile = Instantiate(projectile, spawn.position, spawn.rotation * offset);
 
-        //Destroy(vfxInstance, 10f);
+        Destroy(vfxInstance, 10f);
     }
 }

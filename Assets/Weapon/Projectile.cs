@@ -5,6 +5,7 @@ public class Projectile : MonoBehaviour
     public Vector3 velocity;
     public float power;
     public float ap;
+    public int team;
 
     void FixedUpdate()
     {

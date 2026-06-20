@@ -16,6 +16,7 @@ public class Missile : MonoBehaviour
     public Transform target;
     public bool cruise;
     public float cruiseHeight;
+    public float cruiseEndDistance;
     public float N;
     //Vector3 previousLOS;
     Projectile p;
@@ -25,7 +26,6 @@ public class Missile : MonoBehaviour
     {
         p = GetComponent<Projectile>();
         trail = GetComponent<VisualEffect>();
-        //previousLOS = (target.position - transform.position).normalized;
     }
 
     void FixedUpdate()
@@ -60,15 +60,19 @@ public class Missile : MonoBehaviour
         Quaternion targetRotation = Quaternion.LookRotation(p.velocity.normalized);
         if (target != null)
         {
-            //Vector3 LOSRate = (relativePosition - previousLOS) / dt;
-            //previousLOS = relativePosition;
+            Vector3 altitudeCorrection = Vector3.zero;
+            if (cruise && Vector3.Distance(target.position, transform.position) > cruiseEndDistance)
+            {
+                float altitudeError = cruiseHeight - transform.position.y;
+                altitudeCorrection = Vector3.up * altitudeError * 0.001f;
+            }
 
-            Vector3 relativePosition = (target.position - transform.position).normalized;
+            Vector3 relativePosition = target.position - transform.position;
             Vector3 relativeVelocity = target.GetComponent<Rigidbody>().linearVelocity - p.velocity;
             Vector3 AngularLOSRate = Vector3.Cross(relativePosition, relativeVelocity) / relativePosition.sqrMagnitude;
-            Vector3 LOSRate = Vector3.Cross(AngularLOSRate, relativePosition);
+            Vector3 LOSRate = Vector3.Cross(AngularLOSRate, relativePosition.normalized);
             Vector3 desiredTurn = N * LOSRate;
-            Vector3 desiredForward = (transform.forward + desiredTurn).normalized;
+            Vector3 desiredForward = (transform.forward + desiredTurn + altitudeCorrection).normalized;
             targetRotation = Quaternion.LookRotation(desiredForward);
         }
         float speedTurnRate = turnRate * (1f + p.velocity.magnitude * 0.05f);
