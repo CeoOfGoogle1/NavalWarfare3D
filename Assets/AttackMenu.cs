@@ -18,7 +18,7 @@ public class AttackMenu : MonoBehaviour
 
         foreach (var group in weaponGroups)
         {
-            Button btn = Instantiate(buttonPrefab, panel.transform, false);
+            Button btn = Instantiate(buttonPrefab, buttonParent, false);
             btn.GetComponentInChildren<TMP_Text>().text = group.displayName;
             btn.onClick.AddListener(() => SelectGroup(group));
         }
