@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class Navigation : MonoBehaviour
@@ -16,6 +17,7 @@ public class Navigation : MonoBehaviour
     float targetHeading;
     public float forcedHeading;
     public float targetDistance;
+    [SerializeField] private LineRenderer lineRenderer;
     Propulsion ship;
     Rigidbody rb;
 
@@ -37,13 +39,15 @@ public class Navigation : MonoBehaviour
             return;
         }
 
-        if (waypoints != null)
+        if (waypoints.Count != 0)
         {
             target = waypoints.First();
             if (waypointArrivalDistance > Vector3.Distance(transform.position, target))
             {
                 waypoints.Remove(waypoints.First());
-            } 
+            }
+
+            VisualizeWaypoints();
         }
 
         targetDirection = target - transform.position;
@@ -57,5 +61,18 @@ public class Navigation : MonoBehaviour
 
         targetDistance = Vector3.Distance(transform.position, target);
         ship.throttle = -throttlePID.Update(dt, targetDistance, 0);
+    }
+
+    void VisualizeWaypoints()
+    {
+        lineRenderer.positionCount = waypoints.Count + 1;
+
+        // Ship position
+        lineRenderer.SetPosition(0, transform.position);
+
+        foreach (var waypoint in waypoints)
+        {
+            lineRenderer.SetPosition(waypoints.IndexOf(waypoint) + 1, waypoint);
+        }
     }
 }
